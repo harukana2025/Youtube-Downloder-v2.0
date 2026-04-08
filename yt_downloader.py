@@ -102,22 +102,38 @@ def get_info(url):
     except Exception as e:
         return None
 
-if url:
-    with st.spinner("Fetching video info..."):
-        info = get_info(url)
+if "analyzed_info" not in st.session_state:
+    st.session_state.analyzed_info = None
+if "current_url" not in st.session_state:
+    st.session_state.current_url = ""
+
+if st.button("🔍 解析する (Analyze)"):
+    if url:
+        with st.spinner("Fetching video info..."):
+            info = get_info(url)
+            if info:
+                st.session_state.analyzed_info = info
+                st.session_state.current_url = url
+            else:
+                st.error("Could not fetch information. Please check if the URL is correct.")
+                st.session_state.analyzed_info = None
+    else:
+        st.warning("URLを入力してください。")
+
+# If we have analyzed info for the current URL, display it
+if st.session_state.analyzed_info and st.session_state.current_url == url:
+    info = st.session_state.analyzed_info
+    st.success("Information fetched successfully!")
         
-    if info:
-        st.success("Information fetched successfully!")
-        
-        # Display Info
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.image(info.get('thumbnail', ''), use_container_width=True)
-        with col2:
-            st.subheader(info.get('title', 'Unknown Title'))
-            duration = info.get('duration', 0)
-            st.write(f"**Duration:** {duration // 60}m {duration % 60}s")
-            st.write(f"**Channel:** {info.get('uploader', 'Unknown')}")
+    # Display Info
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.image(info.get('thumbnail', ''), use_container_width=True)
+    with col2:
+        st.subheader(info.get('title', 'Unknown Title'))
+        duration = info.get('duration', 0)
+        st.write(f"**Duration:** {duration // 60}m {duration % 60}s")
+        st.write(f"**Channel:** {info.get('uploader', 'Unknown')}")
             
         
         if "download_path" not in st.session_state:
